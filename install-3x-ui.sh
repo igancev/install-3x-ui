@@ -1,12 +1,20 @@
 #!/bin/bash
 
 # colors for output
-blue='\033[0;34m'
+red='\033[0;31m'
 green='\033[0;32m'
+blue='\033[0;34m'
 plain='\033[0m'
 
 echo -e "${blue}### Start install 3x-ui panel ###${plain}\n"
-bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh <<< "y")
+bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+
+# Check that everything is ok
+lastExitCode=$?
+if [[ $lastExitCode -ne 0 ]]; then
+  echo -e "${red}### Sorry, something went wrong...read the output logs above ###${plain}\n"
+  exit $lastExitCode
+fi
 
 echo -e "${blue}### Generate self signed SSL cert and key for web panel ###${plain}\n"
 sudo mkdir -p /root/cert/3x-ui-selfsigned && \
@@ -24,7 +32,7 @@ echo -e "${blue}### Restart 3x-ui panel ... ###${plain}\n"
 /usr/local/x-ui/x-ui migrate
 systemctl restart x-ui
 
-# show link to panel
+# Show link to panel
 server_ip=$(curl -s https://api.ipify.org)
 config_username=$(/usr/local/x-ui/x-ui setting -show true | grep -Eo 'username: .+' | awk '{print $2}')
 config_password=$(/usr/local/x-ui/x-ui setting -show true | grep -Eo 'password: .+' | awk '{print $2}')
